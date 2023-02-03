@@ -15,3 +15,5 @@ RUN sudo apt-get -yq update && sudo apt-get install -y python3 python3-pip && \
 COPY . .
 
 WORKDIR /app/
+
+CMD ["python3", "main.py"]
