@@ -39,16 +39,18 @@ def orderFood(selection):
         print("pasta")
     elif selection == "pasta2":
         print()
-PATH = os.getcwd() + "/chromedriver"
 
-service = ChromeService(ChromeDriverManager().install())
-# service = ChromeService(PATH)
 
-options = webdriver.ChromeOptions()
-# options.add_argument("--window-size=3000,3000")
-# options.add_argument("--start-maximized")
-# options.add_argument("--headless")
-driver = webdriver.Chrome(service=service, options=options)
-# wait = WebDriverWait(driver, 150, poll_frequency=1)
-driver.get("google.com")
-input("Press Enter to continue...")
+# PATH = os.getcwd() + "/chromedriver"
+#
+# service = ChromeService(ChromeDriverManager().install())
+# # service = ChromeService(PATH)
+#
+# options = webdriver.ChromeOptions()
+# # options.add_argument("--window-size=3000,3000")
+# # options.add_argument("--start-maximized")
+# # options.add_argument("--headless")
+# driver = webdriver.Chrome(service=service, options=options)
+# # wait = WebDriverWait(driver, 150, poll_frequency=1)
+# driver.get("google.com")
+# input("Press Enter to continue...")

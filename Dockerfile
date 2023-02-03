@@ -16,4 +16,4 @@ COPY . .
 
 WORKDIR /app/
 
-CMD ["python3", "main.py"]
+CMD ["uvicorn", "main:app"]
