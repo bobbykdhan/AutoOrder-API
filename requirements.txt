@@ -3,3 +3,4 @@ python-dotenv==0.21.1
 selenium==4.8.0
 
 colorama~=0.4.6
+pyotp~=2.8.0
