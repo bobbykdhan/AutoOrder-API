@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager import *
 from dotenv import load_dotenv
 from webdriver_manager.chrome import ChromeDriverManager
+from twilio.rest import Client
+
 
 load_dotenv()
 app = FastAPI()
@@ -43,6 +45,27 @@ def orderFood(selection):
 
 
 
+def sendText(phoneNumber, message):
+    if int(os.environ['DEBUG']):
+        auth_token = os.environ['TWILIO_TEST_TOKEN']
+    else:
+        auth_token = os.environ['TWILIO_AUTH_TOKEN']
+
+
+    account_sid = os.environ['TWILIO_ACCOUNT_SID']
+    client = Client(account_sid, auth_token)
+
+    message = client.messages \
+                    .create(
+                         body=message,
+                         from_='+1'+ os.environ['TWILIO_PHONE_NUMBER'],
+                         to='+1' + phoneNumber
+                     )
+
+    print(message.sid)
+
+
+
 
 
 service = ChromeService(ChromeDriverManager().install())
@@ -54,5 +77,4 @@ options.add_argument("--start-maximized")
 # options.add_argument("--headless")
 driver = webdriver.Chrome(service=service, options=options)
 # wait = WebDriverWait(driver, 150, poll_frequency=1)
-driver.get("google.com")
-input("Press Enter to continue...")
+sendText(os.environ['PHONE_NUMBER'], "Hello World")
