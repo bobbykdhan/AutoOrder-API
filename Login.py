@@ -1,4 +1,7 @@
 import os
+import time
+import webbrowser
+
 import dotenv
 import pyotp
 import base64
@@ -9,6 +12,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as ec
 from dotenv import load_dotenv
 from webdriver_manager.chrome import ChromeDriverManager
+
+import backend_server
+import image_uploader
 
 
 def get_code(token=None, count=None):
@@ -48,9 +54,10 @@ def login(username, password, driver, url=None):
     driver.find_element(By.ID, "trust-browser-button").click()
 
 
-def debug_method(send_text):
+def debug_method(send_text=False):
     service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
     options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
     options.add_argument("--window-size=600,1000")
     driver = webdriver.Chrome(service=service, options=options)
 
@@ -62,19 +69,27 @@ def debug_method(send_text):
           "%252Fhome"
 
     login(username, password, driver, url)
-    input("Press Enter to continue...")
-    print("hi")
     if send_text:
+        time.sleep(5)
         testing_the_request(driver)
+    return driver
 
 
 def testing_the_request(driver):
     lol = driver.find_elements(By.XPATH, ".//*")
     new = []
-    for i in lol:
-        if (i.text.startswith("All\nPinned\n2225 Spring")): new.append(i)
-    return new[0].text
+    send_screenshot(driver, True)
 
 
-debug_method()
+def send_screenshot(driver, debug=False, filename=None):
+    if filename is None:
+        filename = "screen"
+    path = os.getcwd() + "\screenshots\\" + filename + ".png"
+    driver.save_screenshot(path)
+    webbrowser.open(image_uploader.upload_image(path))
+    if debug:
+        backend_server.sendText(os.getenv("PHONE_NUMBER"), ("The link is: " + image_uploader.upload_image(path)))
 
+
+if __name__ == '__main__':
+    driver = debug_method(True)
