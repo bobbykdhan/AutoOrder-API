@@ -48,7 +48,7 @@ def login(username, password, driver, url=None):
     driver.find_element(By.ID, "trust-browser-button").click()
 
 
-def debug_method():
+def debug_method(send_text):
     service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
     options = webdriver.ChromeOptions()
     options.add_argument("--window-size=600,1000")
@@ -63,5 +63,18 @@ def debug_method():
 
     login(username, password, driver, url)
     input("Press Enter to continue...")
+    print("hi")
+    if send_text:
+        testing_the_request(driver)
+
+
+def testing_the_request(driver):
+    lol = driver.find_elements(By.XPATH, ".//*")
+    new = []
+    for i in lol:
+        if (i.text.startswith("All\nPinned\n2225 Spring")): new.append(i)
+    return new[0].text
+
 
 debug_method()
+
