@@ -1,15 +1,11 @@
 import os
 
-from fastapi import FastAPI
-import selenium
-from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager import *
 from dotenv import load_dotenv
-from webdriver_manager.chrome import ChromeDriverManager
+from fastapi import FastAPI
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 from twilio.rest import Client
-
+from webdriver_manager.chrome import ChromeDriverManager
 
 load_dotenv()
 app = FastAPI()
@@ -43,29 +39,23 @@ def orderFood(selection):
         print()
 
 
-
-
 def sendText(phoneNumber, message):
     if int(os.environ['DEBUG']):
         auth_token = os.environ['TWILIO_TEST_TOKEN']
     else:
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
 
-
     account_sid = os.environ['TWILIO_ACCOUNT_SID']
     client = Client(account_sid, auth_token)
 
     message = client.messages \
-                    .create(
-                         body=message,
-                         from_='+1'+ os.environ['TWILIO_PHONE_NUMBER'],
-                         to='+1' + phoneNumber
-                     )
+        .create(
+        body=message,
+        from_='+1' + os.environ['TWILIO_PHONE_NUMBER'],
+        to='+1' + phoneNumber
+    )
 
     print(message.sid)
-
-
-
 
 
 service = ChromeService(ChromeDriverManager().install())
