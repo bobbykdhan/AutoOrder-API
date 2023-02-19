@@ -1,11 +1,10 @@
-import os
+from fastapi import Request
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from twilio.rest import Client
-from webdriver_manager.chrome import ChromeDriverManager
+
+from image import upload_screenshot
+from webdriver_handler import *
 
 load_dotenv()
 app = FastAPI()
@@ -20,6 +19,13 @@ async def root():
 async def say_hello(selection: str):
     orderFood(selection)
 
+@app.get("/testScreenshot")
+async def testScreenshot():
+    driver = create_driver()
+    driver.get("https://www.youtube.com")
+    time.sleep(5)
+
+    return {"message": "Screenshot is at: " + upload_screenshot(driver, True, True)}
 
 def orderFood(selection):
     # Initialize the Selenium WebDriver and the Wait object.
@@ -39,32 +45,18 @@ def orderFood(selection):
         print()
 
 
-def sendText(phoneNumber, message):
-    if int(os.environ['DEBUG']):
-        auth_token = os.environ['TWILIO_TEST_TOKEN']
-    else:
-        auth_token = os.environ['TWILIO_AUTH_TOKEN']
+#TODO make this work
 
-    account_sid = os.environ['TWILIO_ACCOUNT_SID']
-    client = Client(account_sid, auth_token)
-
-    message = client.messages \
-        .create(
-        body=message,
-        from_='+1' + os.environ['TWILIO_PHONE_NUMBER'],
-        to='+1' + phoneNumber
-    )
-
-    print(message.sid)
+# @app.get('/sms')
+# @app.post("/sms")
+# async def root(request: Request):
+#     """Respond to incoming calls with a simple text message."""
+#     # Start our TwiML response
+#     # resp = MessagingResponse()
+#     #
+#     # # Add a message
+#     # resp.message("The Robots are coming! Head for the hills!")
+#     #
+#     # print(str(resp))
 
 
-service = ChromeService(ChromeDriverManager().install())
-# service = ChromeService(PATH)
-
-options = webdriver.ChromeOptions()
-options.add_argument("--window-size=3000,3000")
-options.add_argument("--start-maximized")
-# options.add_argument("--headless")
-driver = webdriver.Chrome(service=service, options=options)
-# wait = WebDriverWait(driver, 150, poll_frequency=1)
-sendText(os.environ['PHONE_NUMBER'], "Hello World")
