@@ -4,17 +4,25 @@ from dataclasses import dataclass
 from getpass import getpass
 import os
 
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium import webdriver
 
 from colorama import Fore, Back, Style
 
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+
+from selenium import webdriver
+import chromedriver_binary
+import my_twilio
+
 
 
 @dataclass
@@ -45,22 +53,18 @@ class Modifier:
     isSelected: bool = False
 
 
-import os
-
-service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
-options = webdriver.ChromeOptions()
-
-# service = ChromeService(PATH)
-
-# options.add_argument("--window-size=3000,3000")
-options.add_argument("--start-maximized")
-# options.add_argument("--headless")
-driver = webdriver.Chrome(service=service, options=options)
-wait = WebDriverWait(driver, 150, poll_frequency=1)
-
 # Initialize the store inventory
 global items
 items = []
+
+
+def create_driver(screen_size=(3000, 3000), headless=True):
+    service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
+    options = webdriver.ChromeOptions()
+    if headless:
+        options.add_argument("--headless")
+    options.add_argument("--window-size=%s,%s" % screen_size)
+    return webdriver.Chrome(service=service, options=options)
 
 
 def setupOrder(orderString):
@@ -76,9 +80,9 @@ def setupOrder(orderString):
     return (store, category, items)
 
 
-def main(orderString):
+def main(orderString, driver):
     """ Main function that runs the program."""
-
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
     # Opens the ondemand website
     driver.get("https://ondemand.rit.edu/")
 
@@ -87,44 +91,46 @@ def main(orderString):
     # username, password, firstName, lastInitial, phoneNumber = USERNAME, PASSWORD, "", "", PHONE
     # Asks the user for the store they want to shop from
 
-    selectStore(store)
+    selectStore(store, None)
 
     # Waits for the site to load and calls the selectCategory function
 
     # wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
     # driver.get("https://ondemand.rit.edu/streamlinedmenu/dc9df36d-8a64-42cf-b7c1-fa041f5f3cfd/2195")
 
-    selectCategory(category)
+    selectCategory(category, None)
     input("Press Enter to continue...")
     # Calls the addToCart function and asks the user if they wish to continue shopping, change the category, or checkout
     while True:
-        addToCart()
+        addToCart(None)
         choice = input(
             "Press Y if you are done adding to cart, Press C if you wish to choose another category, Press any key to keep selecting\n")
         if (choice == "Y"):
             break
         elif choice == "C":
             # Calls the selectCategory function for the user to change their category
-            selectCategory()
+            selectCategory(driver)
 
     print("Logging in\n")
 
     # Calls the signIn function to log the user in
-    signIn(username, password)
+    login(driver)
     input("Waiting for duo press any key when complete")
 
     # Calls the fulfillment function to complete the purchase after the cart container is loaded
     wait.until(ec.presence_of_element_located((By.CLASS_NAME, "cart-link-container")))
     print("Fulfilling order\n")
-    fulfillment(firstName, lastInitial, phoneNumber)
+    fulfillment(firstName, lastInitial, phoneNumber, None)
     print("Done placing order\n")
 
 
-def selectStore(selectedStore):
-    """ Selects the store the user wants to shop from """
+def selectStore(selectedStore, driver):
+    """ Selects the store the user wants to shop from
+    :param driver:
+    """
 
     # Confirms the site is loaded and stores the store containers in a list
-
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "top-container")))
     storeContainers = driver.find_element(By.CLASS_NAME, "BottomContainer").find_elements(By.CLASS_NAME,
                                                                                           "top-container")
@@ -154,10 +160,14 @@ def selectStore(selectedStore):
                 return
 
 
-def selectCategory(selectedCategory):
-    """Allows the user to change the category."""
+def selectCategory(selectedCategory, driver):
+    """Allows the user to change the category.
+    :param driver:
+    """
     # Clears the list of items
     items.clear()
+
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "MuiButtonBase-root")))
 
     categories = driver.find_elements(By.CLASS_NAME, "MuiButtonBase-root")
@@ -180,25 +190,27 @@ def selectCategory(selectedCategory):
     print("Reindexing items\n")
     # Waits for the store to load and searches the site for the items
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
-    searchForItems(int(choice))
+    searchForItems(int(choice), None)
 
 
-def searchForItems(categoryNumber):
-    """Searches for items in the store. Creates an updated a list of items."""
+def searchForItems(categoryNumber, driver):
+    """Searches for items in the store. Creates an updated a list of items.
+    :param driver:
+    """
 
     # Waits for the store to load
     print("Searching for items")
 
-    driver.find_elements(By.CLASS_NAME, "MuiTabs-flexContainer")[0].find_elements(By.CSS_SELECTOR, "*")[categoryNumber].click()
+    driver.find_elements(By.CLASS_NAME, "MuiTabs-flexContainer")[0].find_elements(By.CSS_SELECTOR, "*")[
+        categoryNumber].click()
 
     page = driver.find_element(By.ID, "streamlinedmenu")
 
-    containers= page.find_elements(By.CLASS_NAME, "list-items-container")
+    containers = page.find_elements(By.CLASS_NAME, "list-items-container")
     # Gets the list of all elements with a class name of "detail-container"
 
-    itemContainersElement =containers[categoryNumber].find_element(By.CLASS_NAME, "item-listcontainer")
+    itemContainersElement = containers[categoryNumber].find_element(By.CLASS_NAME, "item-listcontainer")
     itemContainers = itemContainersElement.find_elements(By.CLASS_NAME, "top-container")
-
 
     # Iterates through each element and creates an Item object for each item
     for itemContainer in itemContainers:
@@ -215,11 +227,13 @@ def searchForItems(categoryNumber):
         items.append(newItem)
 
 
-def addToCart(selectedItem=None):
-    """Adds an item to the cart."""
+def addToCart(driver, selectedItem=None):
+    """Adds an item to the cart.
+    :param driver:
+    """
     # If no item index is given, ask the user for one. Otherwise, use the given index.
     # TODO: add the ability to add items without waiting for user input
-
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
     itemIndex = None
     if itemIndex is None:
         # Iterates through each item in the list of items and prints the name and index
@@ -325,32 +339,11 @@ def addToCart(selectedItem=None):
             pass
 
 
-def signIn(username, password):
-    """Signs in to Shibboleth using the given username and password."""
-
-    # Waits until the cart icon is visible and clicks it
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "cart-icon")))
-    driver.find_element(By.CLASS_NAME, "cart-icon").click()
-
-    # Waits until the checkout icon is visible and clicks it
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-cart-button")))
-    driver.find_element(By.CLASS_NAME, "pay-cart-button").click()
-
-    # Waits until the login icon is visible and clicks it
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "login-btn-atrium")))
-    driver.find_element(By.CLASS_NAME, "login-btn-atrium").click()
-
-    # Waits until the username input is visible, enters the username, password and clicks the login button
-    wait.until(ec.visibility_of_element_located((By.ID, "username")))
-    driver.find_element(By.ID, "username").send_keys(username)
-
-    driver.find_element(By.ID, "password").send_keys(password)
-    driver.find_element(By.NAME, "_eventId_proceed").click()
-
-
-def fulfillment(firstName, lastInitial, phoneNumber):
-    """Fulfills the order."""
-
+def fulfillment(firstName, lastInitial, phoneNumber, driver):
+    """Fulfills the order.
+    :param driver:
+    """
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
     # Clicks the cart button, waits for the checkout button to appear and clicks it
     driver.find_element(By.CLASS_NAME, "cart-icon").click()
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-cart-button")))
@@ -389,4 +382,5 @@ def fulfillment(firstName, lastInitial, phoneNumber):
     driver.find_element(By.CSS_SELECTOR, sendSelector).click()
 
 
-main("Sol's Underground,Beverages,")
+if "__main__" == __name__:
+    main("Sol's Underground,Beverages,", create_driver())
