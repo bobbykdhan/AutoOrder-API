@@ -26,10 +26,10 @@ def upload_image(image, debug=False):
     """Uploads image files to Imgur"""
 
     config = get_config()
-
+    load_dotenv()
     if not config:
-       print("Cannot upload - could not find IMGUR_API_ID or " "IMGUR_API_SECRET environment variables or config file")
-    return None
+        print("Cannot upload - could not find IMGUR_API_ID or " "IMGUR_API_SECRET environment variables or config file")
+        return ""
 
     client = ImgurClient(config["id"], config["secret"])
 
