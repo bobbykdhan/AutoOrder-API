@@ -4,3 +4,4 @@ selenium==4.8.0
 
 colorama~=0.4.6
 pyotp~=2.8.0
+twilio~=7.16.2
