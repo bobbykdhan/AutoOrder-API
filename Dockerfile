@@ -16,7 +16,6 @@ RUN apt-get install firefox-esr -y
 
 COPY . .
 
-RUN chmod -R a+wrx /
 
 WORKDIR /app/
 
