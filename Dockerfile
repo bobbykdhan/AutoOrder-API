@@ -12,6 +12,8 @@ ADD ./ /app
 COPY ./requirements.txt requirements.txt
 RUN apt-get -yq update && pip3 install --no-cache-dir -r requirements.txt
 
+RUN apt-get install firefox-esr -y
+
 COPY . .
 
 WORKDIR /app/
