@@ -21,11 +21,13 @@ async def say_hello(selection: str):
 
 @app.get("/testScreenshot")
 async def testScreenshot():
-    driver = create_driver()
+    driver = create_driver(True)
     driver.get("https://www.youtube.com")
-    time.sleep(5)
-
-    return {"message": "Screenshot is at: " + upload_screenshot(driver, True, True)}
+    print("Created driver")
+    time.sleep(10)
+    link = upload_screenshot(driver, True, True)
+    print("Uploaded screenshot")
+    return {"message": "Screenshot is at: " + link}
 
 def orderFood(selection):
     # Initialize the Selenium WebDriver and the Wait object.
