@@ -18,6 +18,7 @@ COPY . .
 
 RUN mkdir /app/drivers && chgrp -R 0 /app/drivers && chmod -R g+wrx /app/drivers
 RUN mkdir /app/screenshots && chgrp -R 0 /app/screenshots && chmod -R g+wrx /app/screenshots
+RUN touch /app/geckodriver.log && chgrp -R 0 /app/geckodriver.log && chmod -R g+wrx /app/geckodriver.log
 
 WORKDIR /app/
 
