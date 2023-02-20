@@ -1,28 +1,16 @@
-import dataclasses
-import time
 from dataclasses import dataclass
-from getpass import getpass
-import os
 
-
-from selenium.webdriver import ActionChains
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
+from colorama import Fore
 from selenium import webdriver
-
-from colorama import Fore, Back, Style
-
+from selenium.webdriver import ActionChains
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-
-from selenium import webdriver
-import chromedriver_binary
-import my_twilio
-
 
 
 @dataclass
@@ -58,13 +46,26 @@ global items
 items = []
 
 
-def create_driver(screen_size=(3000, 3000), headless=True):
-    service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
-    options = webdriver.ChromeOptions()
+def create_driver(firefox=False, headless=True, screen_size=(3000, 3000)):
+    if firefox:
+        service = FirefoxService(GeckoDriverManager(path=r"Drivers").install())
+        options = webdriver.FirefoxOptions()
+    else:
+        service = ChromeService(ChromeDriverManager(path=r"Drivers").install())
+        options = webdriver.ChromeOptions()
+
     if headless:
         options.add_argument("--headless")
     options.add_argument("--window-size=%s,%s" % screen_size)
-    return webdriver.Chrome(service=service, options=options)
+    if firefox:
+        return webdriver.Firefox(service=service, options=options)
+    else:
+        try:
+            return webdriver.Chrome(service=service, options=options)
+        except Exception as e:
+            print(e)
+            print("Unable to use Chrome. Using Firefox instead.")
+            return webdriver.Firefox(service=service, options=options)
 
 
 def setupOrder(orderString):
@@ -150,8 +151,11 @@ def selectStore(selectedStore, driver):
                 print(Fore.RED + "Closed\n" + Fore.RESET)
             else:
                 print("Open\n")
+        if selectedStore is None or selectedStore == "":
+            selectedStore = str(input("Select a store by entering the index\n"))
+            selectedStore = stores[int(selectedStore)]
         for store in stores:
-            if selectedStore in store.name:
+            if selectedStore in str(store.name):
                 print("Selected store: " + store.name)
                 if store.isClosed:
                     raise Exception("Store is closed")
@@ -381,6 +385,6 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver):
     wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
     driver.find_element(By.CSS_SELECTOR, sendSelector).click()
 
-
-if "__main__" == __name__:
-    main("Sol's Underground,Beverages,", create_driver())
+#
+# if "__main__" == __name__:
+#     main("Sol's Underground,Beverages,", create_driver())
