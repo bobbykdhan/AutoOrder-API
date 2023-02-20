@@ -53,7 +53,7 @@ def upload_screenshot(driver, new_pic=True, send_text=False, filename=None, path
         path = take_screenshot(driver, filename, path)
     link = upload_image(path)
     if send_text:
-        my_twilio.send_text(os.getenv("PHONE_NUMBER"), ("The link is: " + link))
+        my_twilio.send_text(("The link is: " + link), os.getenv("PHONE_NUMBER"))
     if link == "":
         return "Error"
     return link
@@ -69,7 +69,8 @@ def take_screenshot(driver, filename=None, path=None):
     driver.save_screenshot(path)
     return path
 
-if __name__ == "__main__":
-    load_dotenv()
-    print("The link is" + upload_image("/Users/bobby/Documents/Projects/personalOrder/hi.png"))
 
+if __name__ == '__main__':
+    load_dotenv()
+    driver = create_driver()
+    print(upload_screenshot(driver, False, False))
