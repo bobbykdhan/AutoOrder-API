@@ -1,17 +1,15 @@
-import os
 import time
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-import my_twilio
 from image import upload_screenshot
 from webdriver_handler import *
 
 load_dotenv()
 
 app = FastAPI()
-my_twilio.send_text("Personal Order server started", os.getenv("PHONE_NUMBER"))
+# my_twilio.send_text("Personal Order server started", os.getenv("PHONE_NUMBER"))
 
 
 @app.get("/")
