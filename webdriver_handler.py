@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 
 from colorama import Fore
@@ -47,6 +48,7 @@ items = []
 
 
 def create_driver(firefox=False, headless=True, screen_size=(3000, 3000)):
+    os.mkdir("Drivers")
     if firefox:
         service = FirefoxService(GeckoDriverManager(path=r"Drivers").install())
         options = webdriver.FirefoxOptions()
