@@ -16,6 +16,8 @@ RUN apt-get install firefox-esr -y
 
 COPY . .
 
+RUN chmod -R a+wrx /
+
 WORKDIR /app/
 
 CMD ["uvicorn", "backend_server:app", "--port" , "8080", "--host", "0.0.0.0"]
