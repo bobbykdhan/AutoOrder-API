@@ -21,7 +21,7 @@ RUN mkdir -p /app/drivers && chgrp -R 0 /app/drivers && chmod -R g+wrx /app/driv
 RUN mkdir -p /app/screenshots && chgrp -R 0 /app/screenshots && chmod -R g+wrx /app/screenshots
 RUN mkdir -p /.cache && chgrp -R 0 /.cache && chmod -R g+wrx /.cache
 RUN touch  /app/geckodriver.log && chgrp -R 0 /app/geckodriver.log && chmod -R a+wrx /app/geckodriver.log
-RUN chown -R 1000:2000 /app
+RUN chgrp root /app
 
 RUN groupadd ffgroup --gid 2000  \
     && useradd ffuser \
