@@ -13,8 +13,7 @@ load_dotenv()
 app = FastAPI()
 
 my_twilio.send_text("Personal Order server started")
-time.sleep(5)
-testScreenshot()
+
 
 
 @app.get("/")
@@ -53,6 +52,9 @@ def orderFood(selection):
     elif selection == "pasta2":
         print()
 
+
+time.sleep(5)
+testScreenshot()
 
 #TODO make this work
 
