@@ -58,6 +58,7 @@ def create_driver(firefox=False, headless=True, screen_size=(3000, 3000)):
         options.add_argument("--headless")
     options.add_argument("--window-size=%s,%s" % screen_size)
     if firefox:
+        print("Downloaded Firefox driver. Starting Firefox.")
         return webdriver.Firefox(service=service, options=options)
     else:
         try:
