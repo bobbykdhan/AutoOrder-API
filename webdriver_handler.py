@@ -48,8 +48,8 @@ items = []
 
 def create_driver(firefox=False, headless=True, screen_size=(3000, 3000)):
     if firefox:
-        service = FirefoxService(GeckoDriverManager().install())
-        # service = FirefoxService(GeckoDriverManager(path=r"drivers").install())
+        #service = FirefoxService(GeckoDriverManager().install())
+        service = FirefoxService(GeckoDriverManager(path=r"drivers").install())
         options = webdriver.FirefoxOptions()
     else:
         # service = ChromeService(ChromeDriverManager(path=r"drivers").install())
