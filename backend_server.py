@@ -29,7 +29,8 @@ async def testScreenshot():
     time.sleep(10)
     link = upload_screenshot(driver, True, True)
     print("Uploaded screenshot")
-    return {"message": "Screenshot is at: " + link}
+    # return {"message": "Screenshot is at: " + link}
+    return {"message": "Request accepted"}
 
 def orderFood(selection):
     # Initialize the Selenium WebDriver and the Wait object.
