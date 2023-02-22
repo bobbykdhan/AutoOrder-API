@@ -23,4 +23,4 @@ RUN touch /app/geckodriver.log && chgrp -R 0 /app/geckodriver.log && chmod -R g+
 
 WORKDIR /app/
 
-CMD ["sudo", "uvicorn", "backend_server:app", "--port" , "8080", "--host", "0.0.0.0"]
+CMD ["uvicorn", "backend_server:app", "--port" , "8080", "--host", "0.0.0.0"]
