@@ -12,7 +12,7 @@ load_dotenv()
 
 app = FastAPI()
 
-my_twilio.send_text("Personal Order server started", os.getenv("PHONE_NUMBER"))
+my_twilio.send_text("Personal Order server started")
 time.sleep(5)
 testScreenshot()
 
