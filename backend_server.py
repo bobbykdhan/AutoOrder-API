@@ -12,7 +12,7 @@ app = FastAPI()
 
 my_twilio.send_text("Personal Order server started", os.getenv("PHONE_NUMBER"))
 time.sleep(5)
-await testScreenshot()
+testScreenshot()
 
 
 @app.get("/")
