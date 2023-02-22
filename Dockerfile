@@ -35,4 +35,4 @@ WORKDIR /app/
 
 
 
-CMD ["uvicorn", "backend_server:app", "--port" , "8080", "--host", "0.0.0.0"]
+CMD ["su", "-", "ffuser", "-c" , "uvicorn", "backend_server:app", "--port" , "8080", "--host", "0.0.0.0"]

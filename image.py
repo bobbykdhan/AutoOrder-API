@@ -68,7 +68,6 @@ def take_screenshot(driver, filename=None, path=None):
             os.mkdir(os.path.join(os.getcwd(), "screenshots/"))
         path = os.path.join(os.getcwd(), "screenshots/" + filename + ".png")
     driver.save_screenshot(path)
-    print("Screenshot saved to " + path)
     return path
 
 
