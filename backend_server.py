@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from image import upload_screenshot
 from webdriver_handler import *
 
+import my_twilio
+
 load_dotenv()
 
 app = FastAPI()
