@@ -7,6 +7,8 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
+import Login
+
 
 @dataclass
 class Item:
@@ -73,14 +75,14 @@ def main(orderString, driver):
     # username, password, firstName, lastInitial, phoneNumber = USERNAME, PASSWORD, "", "", PHONE
     # Asks the user for the store they want to shop from
 
-    selectStore(store, None)
+    selectStore(store, driver)
 
     # Waits for the site to load and calls the selectCategory function
 
     # wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
     # driver.get("https://ondemand.rit.edu/streamlinedmenu/dc9df36d-8a64-42cf-b7c1-fa041f5f3cfd/2195")
 
-    selectCategory(category, None)
+    selectCategory(category, driver)
     input("Press Enter to continue...")
     # Calls the addToCart function and asks the user if they wish to continue shopping, change the category, or checkout
     while True:
@@ -95,14 +97,15 @@ def main(orderString, driver):
 
     print("Logging in\n")
 
+
     # Calls the signIn function to log the user in
-    login(driver)
+    Login.login(driver)
     input("Waiting for duo press any key when complete")
 
     # Calls the fulfillment function to complete the purchase after the cart container is loaded
     wait.until(ec.presence_of_element_located((By.CLASS_NAME, "cart-link-container")))
     print("Fulfilling order\n")
-    fulfillment(firstName, lastInitial, phoneNumber, None)
+    # fulfillment(firstName, lastInitial, phoneNumber, None)
     print("Done placing order\n")
 
 
@@ -365,3 +368,7 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver):
     sendSelector = "#receipt-modal > div.receipt-modal-parent.sc-bmyXtO.lkstDj.sc-frDJqD.bDtUxi.sc-ksYbfQ.kYqsUP.sc-TOsTZ.cESxnL > div.sc-kaNhvL.fPGvtj.sc-bdVaJa.gRrvFh > button"
     wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
     driver.find_element(By.CSS_SELECTOR, sendSelector).click()
+
+
+if __name__ == "__main__":
+    main()

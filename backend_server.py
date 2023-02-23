@@ -6,11 +6,13 @@ from fastapi import FastAPI
 from image import upload_screenshot
 from webdriver_handler import *
 
+import my_twilio
+
 load_dotenv()
 
 app = FastAPI()
 
-# my_twilio.send_text("Personal Order server started")
+my_twilio.send_text("Personal Order server started")
 
 
 
@@ -49,6 +51,10 @@ def orderFood(selection):
         print("pasta")
     elif selection == "pasta2":
         print()
+
+
+time.sleep(5)
+testScreenshot()
 
 #TODO make this work
 
