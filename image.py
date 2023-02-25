@@ -48,7 +48,7 @@ def upload_screenshot(driver, new_pic=True, send_text=False, filename=None, path
         filename = "screen"
     if path is None:
         if not os.path.exists(os.path.join(os.getcwd(), "screenshots")):
-            os.mkdir(os.path.join(os.getcwd(), "screenshots/"), exist_ok=True)
+            os.mkdir(os.path.join(os.getcwd(), "screenshots/"))
         path = os.path.join(os.getcwd(), "screenshots/" + filename + ".png")
     if new_pic:
         path = take_screenshot(driver, filename, path)

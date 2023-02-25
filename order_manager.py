@@ -2,12 +2,10 @@ from dataclasses import dataclass
 
 from colorama import Fore
 from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait
 
-import Login
+from login import *
+from webdriver_handler import create_driver
 
 
 @dataclass
@@ -75,14 +73,14 @@ def main(orderString, driver):
     # username, password, firstName, lastInitial, phoneNumber = USERNAME, PASSWORD, "", "", PHONE
     # Asks the user for the store they want to shop from
 
-    selectStore(store, driver)
+    selectStore(driver, store)
 
     # Waits for the site to load and calls the selectCategory function
 
     # wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
     # driver.get("https://ondemand.rit.edu/streamlinedmenu/dc9df36d-8a64-42cf-b7c1-fa041f5f3cfd/2195")
 
-    selectCategory(category, driver)
+    selectCategory(driver, category)
     input("Press Enter to continue...")
     # Calls the addToCart function and asks the user if they wish to continue shopping, change the category, or checkout
     while True:
@@ -97,9 +95,8 @@ def main(orderString, driver):
 
     print("Logging in\n")
 
-
     # Calls the signIn function to log the user in
-    Login.login(driver)
+    sign_in(driver)
     input("Waiting for duo press any key when complete")
 
     # Calls the fulfillment function to complete the purchase after the cart container is loaded
@@ -109,7 +106,15 @@ def main(orderString, driver):
     print("Done placing order\n")
 
 
-def selectStore(selectedStore, driver):
+def randomDebug(driver=None):
+    if driver is None:
+        driver = create_driver()
+    driver.get("https://ondemand.rit.edu/")
+    selectStore(driver, "Sol's Underground & Beanz")
+    selectCategory(driver, "Beverages")
+
+
+def selectStore(driver, selected_store=None):
     """ Selects the store the user wants to shop from
     :param driver:
     """
@@ -135,11 +140,11 @@ def selectStore(selectedStore, driver):
                 print(Fore.RED + "Closed\n" + Fore.RESET)
             else:
                 print("Open\n")
-        if selectedStore is None or selectedStore == "":
-            selectedStore = str(input("Select a store by entering the index\n"))
-            selectedStore = stores[int(selectedStore)]
+        if selected_store is None or selected_store == "":
+            selected_store = str(input("Select a store by entering the index\n"))
+            selected_store = stores[int(selected_store)]
         for store in stores:
-            if selectedStore in str(store.name):
+            if selected_store in str(store.name):
                 print("Selected store: " + store.name)
                 if store.isClosed:
                     raise Exception("Store is closed")
@@ -148,7 +153,7 @@ def selectStore(selectedStore, driver):
                 return
 
 
-def selectCategory(selectedCategory, driver):
+def selectCategory(driver, selectedCategory=None):
     """Allows the user to change the category.
     :param driver:
     """
@@ -157,20 +162,20 @@ def selectCategory(selectedCategory, driver):
 
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "MuiButtonBase-root")))
-
+    choice = None
     categories = driver.find_elements(By.CLASS_NAME, "MuiButtonBase-root")
     index = 0
     for category in categories:
         print(str(index) + " - " + category.text)
         index += 1
     # Asks the user for the index of the category they want to select and then clicks it
-
-    choice = input("Choose the menu you want to shop from: \n")
-    choice = None
-    for category in categories:
-        if selectedCategory in category.text:
-            choice = categories.index(category)
-            break
+    if selectedCategory is None or selectedCategory == "":
+        choice = input("Choose the menu you want to shop from: \n")
+    else:
+        for category in categories:
+            if selectedCategory in category.text:
+                choice = categories.index(category)
+                break
 
     if int(choice) > len(categories) or choice == None:
         raise Exception("INVALID CHOICE")
@@ -178,9 +183,12 @@ def selectCategory(selectedCategory, driver):
     print("Reindexing items\n")
     # Waits for the store to load and searches the site for the items
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
-    searchForItems(int(choice), None)
+    searchForItems(int(choice), driver)
 
 
+# addToCart(driver,items[0])
+# addToCart(driver,items[2])
+# addToCart(driver,items[1])
 def searchForItems(categoryNumber, driver):
     """Searches for items in the store. Creates an updated a list of items.
     :param driver:
@@ -188,9 +196,6 @@ def searchForItems(categoryNumber, driver):
 
     # Waits for the store to load
     print("Searching for items")
-
-    driver.find_elements(By.CLASS_NAME, "MuiTabs-flexContainer")[0].find_elements(By.CSS_SELECTOR, "*")[
-        categoryNumber].click()
 
     page = driver.find_element(By.ID, "streamlinedmenu")
 
@@ -215,14 +220,16 @@ def searchForItems(categoryNumber, driver):
         items.append(newItem)
 
 
-def addToCart(driver, selectedItem=None):
+def addToCart(driver, selectedItem=None, modifers=None):
     """Adds an item to the cart.
     :param driver:
     """
     # If no item index is given, ask the user for one. Otherwise, use the given index.
     # TODO: add the ability to add items without waiting for user input
+    if selectedItem is not None:
+        itemIndex = items.index(selectedItem)
     wait = WebDriverWait(driver, 150, poll_frequency=1)
-    itemIndex = None
+
     if itemIndex is None:
         # Iterates through each item in the list of items and prints the name and index
 
@@ -235,19 +242,23 @@ def addToCart(driver, selectedItem=None):
     # TODO: Add functionality to add items with modifiers
     # Checks if the user doesn't want to add an item
     if itemIndex != 999:
+        if selectedItem is None:
+            selectedItem = items[itemIndex]
         try:
             # Adds the item to the cart
-            items[itemIndex].cartPointer.click()
+            actions = ActionChains(driver)
+            actions.move_to_element(selectedItem.cartPointer).perform()
+            selectedItem.cartPointer.click()
             wait.until(ec.visibility_of_element_located((By.ID, "item-detail-parent")))
             wait.until(ec.visibility_of_element_located((By.CLASS_NAME, 'add-to-cart-button')))
-            idk = driver.find_element(By.ID, "item-detail-parent")
+            itemPane = driver.find_element(By.ID, "item-detail-parent")
 
             # looks for the modifiers element
             wait.until(ec.visibility_of_element_located((By.CLASS_NAME, 'add-to-cart-button')))
-            modifiers = idk.find_element(By.CLASS_NAME, "modifiers")
-            modifiersAvailable = len(idk.find_elements(By.CLASS_NAME, "modifiers")) > 0
+            modifiersAvailable = len(itemPane.find_elements(By.CLASS_NAME, "modifiers")) > 0
 
             if modifiersAvailable:
+                modifiers = itemPane.find_element(By.CLASS_NAME, "modifiers")
                 print("Modifiers Available")
                 modifiersList = {}
                 modifierGroups = modifiers.find_elements(By.CLASS_NAME, "sc-cTjmhe")
@@ -288,7 +299,7 @@ def addToCart(driver, selectedItem=None):
                             modifierChoice = int(input("Enter the index of the modifier you want to add: \n"))
                             if modifierChoice != 999:
 
-                                actions = ActionChains(driver)
+
                                 # driver.execute_script("arguments[0].scrollIntoView(true);", groupBeingUsed[modifierChoice+1].selectButton)
                                 # driver.execute_script("arguments[0].scrollIntoView();", groupBeingUsed[modifierChoice].selectButton)
 
@@ -309,20 +320,21 @@ def addToCart(driver, selectedItem=None):
                     else:
                         break
 
-            ask = input("Any text for the comments box? (Y or N")
+            # ask = input("Text for the comments section (N to skip):")
+            #
+            # if ask.capitalize() != "N":
+            #     itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field").send_keys(ask)
 
-            if ask.capitalize().equals("Y"):
-                idk.find_element(By.CLASS_NAME, "custom-tip-input-field").send_keys(ask)
-
-            idk.find_element(By.CLASS_NAME, 'add-to-cart-button').click()
-            print("Added " + items[itemIndex].name + " to cart")
+            itemPane.find_element(By.CLASS_NAME, 'add-to-cart-button').click()
+            print("Added " + selectedItem.name + " to cart")
 
 
         except Exception as e:
             # Catches any errors and prints the error
-            idk.find_element(By.CLASS_NAME, 'close-icon').click()
+            print("Error adding item to cart")
+            itemPane.find_element(By.CLASS_NAME, 'close-icon').click()
             print(e)
-            print("Couldn't add " + str(items[itemIndex].name) + " to cart")
+            print("Couldn't add " + str(selectedItem.name) + " to cart")
         except IndexError:
             pass
 
@@ -369,6 +381,5 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver):
     wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
     driver.find_element(By.CSS_SELECTOR, sendSelector).click()
 
-
-if __name__ == "__main__":
-    main()
+# driver = create_driver(False, True)
+# debug(driver)

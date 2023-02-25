@@ -1,16 +1,11 @@
-import _thread
+import base64
 import os
 
 import dotenv
 import pyotp
-import base64
-
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-
-
-
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 def get_code(token=None, count=None):
@@ -23,7 +18,7 @@ def get_code(token=None, count=None):
     return str(pyotp.HOTP(base64.b32encode(token.encode("utf-8"))).at(count))
 
 
-def login(driver, no_duo=False, username=None, password=None, url=None):
+def sign_in(driver, no_duo=False, username=None, password=None, url=None):
     if username is None:
         username = os.getenv("USERNAME")
     if password is None:
