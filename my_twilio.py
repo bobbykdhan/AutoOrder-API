@@ -6,7 +6,9 @@ from twilio.rest import Client
 dotenv.load_dotenv()
 
 
-def send_text(message, phone_number=os.environ['PHONE_NUMBER']):
+def send_text(message, phone_number=None):
+    if phone_number is None:
+        phone_number = os.environ['PHONE_NUMBER']
     if int(os.environ['DEBUG']):
         auth_token = os.environ['TWILIO_TEST_TOKEN']
     else:
