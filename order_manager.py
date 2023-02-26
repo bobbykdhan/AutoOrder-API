@@ -16,11 +16,6 @@ class Item:
     cartPointer: WebElement
 
 
-# Initialize the store inventory
-global items
-items = []
-
-
 @dataclass
 class Store:
     """Class for keeping track of a store."""
@@ -63,22 +58,7 @@ def setupOrder(orderString):
 
 
 def main(orderString, driver):
-    """ Main function that runs the program."""
-    wait = WebDriverWait(driver, 150, poll_frequency=1)
-    # Opens the ondemand website
-    driver.get("https://ondemand.rit.edu/")
-
     store, category, items = setupOrder(orderString)
-
-    # username, password, firstName, lastInitial, phoneNumber = USERNAME, PASSWORD, "", "", PHONE
-    # Asks the user for the store they want to shop from
-
-    selectStore(driver, store)
-
-    # Waits for the site to load and calls the selectCategory function
-
-    # wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
-    # driver.get("https://ondemand.rit.edu/streamlinedmenu/dc9df36d-8a64-42cf-b7c1-fa041f5f3cfd/2195")
 
     selectCategory(driver, category)
     input("Press Enter to continue...")
@@ -158,7 +138,6 @@ def selectCategory(driver, selectedCategory=None):
     :param driver:
     """
     # Clears the list of items
-    items.clear()
 
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "MuiButtonBase-root")))
@@ -183,17 +162,14 @@ def selectCategory(driver, selectedCategory=None):
     print("Reindexing items\n")
     # Waits for the store to load and searches the site for the items
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "detail-container")))
-    searchForItems(int(choice), driver)
+    return searchForItems(int(choice), driver)
 
 
-# addToCart(driver,items[0])
-# addToCart(driver,items[2])
-# addToCart(driver,items[1])
 def searchForItems(categoryNumber, driver):
     """Searches for items in the store. Creates an updated a list of items.
     :param driver:
     """
-
+    items = []
     # Waits for the store to load
     print("Searching for items")
 
@@ -218,16 +194,102 @@ def searchForItems(categoryNumber, driver):
 
         # adds all items to the list of items
         items.append(newItem)
+    return items
 
 
-def addToCart(driver, selectedItem=None, modifers=None):
+def select_item(items, item_name=None):
+    if item_name is None:
+        for item in items:
+            print(str(items.index(item)) + " - " + item.name)
+        print("999 - To not add an item")
+        # Asks the user for the index of the item they want to add
+        itemIndex = int(input("Enter the index of the item you want to add to cart: \n"))
+        if itemIndex == 999:
+            return None
+        return items[itemIndex]
+    for item in items:
+        if item_name in item.name:
+            return item
+    return None
+
+
+def add_modifiers(driver, itemPane, modifersChoices=None):
+    """Adds modifiers to the item
+    :param itemPane:
+    :param modifersChoices: [{"Group": "Item", "Group": "Item"}]
+    """
+    actions = ActionChains(driver)
+    modifiersPane = itemPane.find_element(By.CLASS_NAME, "modifiers")
+    print("Modifiers Available")
+    modifiersList = {}
+    modifierGroups = modifiersPane.find_elements(By.XPATH, "./*")
+    modifierGroupsList = []
+    for modifierGroup in modifierGroups:
+
+        name, rules = modifierGroup.find_element(By.ID, "modifier-header-parent").text.split("\n")
+        modifierGroupsList.append(name + " - " + rules)
+        modifiersList[name] = []
+
+        modifiers = modifierGroup.find_elements(By.XPATH, "./*")
+
+        for modifierCount in range(1, len(modifiers)):
+            modifiersList[name].append(
+                Modifier(modifiers[modifierCount].text, modifierCount, modifiers[modifierCount]))
+
+    for modifierChoice in modifersChoices.keys():
+        for modifierGroup in modifiersList:
+            if modifierChoice in modifierGroup:
+
+                for modifier in modifiersList[modifierGroup]:
+                    if modifersChoices[modifierChoice] in modifier.name:
+                        # actions.move_to_element(modifiersList[modifierGroup][modifiersList[modifierGroup].index(modifier)+1].selectButton).perform()
+                        actions.move_to_element(modifier.selectButton).perform()
+                        modifier.selectButton.click()
+                        print("Added " + modifier.name)
+                        break
+
+    # while True:
+    #     count = 0
+    #     for modifierGroup in modifierGroupsList:
+    #         print(str(count) + " - " + modifierGroup)
+    #         count += 1
+    #     print("999 - To not add a modifier")
+    #     categoryChoice = int(input(
+    #         "Enter the index of the modifier you want to add (You must add all of the required ones): \n"))
+    #     if categoryChoice != 999 and categoryChoice < len(modifierGroupsList):
+    #         groupBeingUsed = modifiersList[modifierGroupsList[categoryChoice].split(" - ")[0]]
+    #         while True:
+    #             print(modifierGroupsList[categoryChoice])
+    #             for modifier in groupBeingUsed:
+    #                 print(str(groupBeingUsed.index(modifier)) + " - " + modifier.name, end="")
+    #                 if modifier.isSelected:
+    #                     print(Fore.RED + " - SELECTED" + Fore.RESET)
+    #
+    #                 else:
+    #                     print()
+    #             print("999 - To go back to category selection")
+    #             modifierChoice = int(input("Enter the index of the modifier you want to add: \n"))
+    #             if modifierChoice != 999:
+    #
+    #                 actions.move_to_element(groupBeingUsed[modifierChoice].selectButton).perform()
+    #                 groupBeingUsed[modifierChoice].selectButton.click()
+    #
+    #                 groupBeingUsed[modifierChoice].isSelected = not groupBeingUsed[
+    #                     modifierChoice].isSelected
+    #             else:
+    #                 break
+    #     else:
+    #         break
+
+
+def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=None):
     """Adds an item to the cart.
     :param driver:
     """
+    itemIndex = 99999
     # If no item index is given, ask the user for one. Otherwise, use the given index.
     # TODO: add the ability to add items without waiting for user input
-    if selectedItem is not None:
-        itemIndex = items.index(selectedItem)
+
     wait = WebDriverWait(driver, 150, poll_frequency=1)
 
     if itemIndex is None:
@@ -258,72 +320,14 @@ def addToCart(driver, selectedItem=None, modifers=None):
             modifiersAvailable = len(itemPane.find_elements(By.CLASS_NAME, "modifiers")) > 0
 
             if modifiersAvailable:
-                modifiers = itemPane.find_element(By.CLASS_NAME, "modifiers")
-                print("Modifiers Available")
-                modifiersList = {}
-                modifierGroups = modifiers.find_elements(By.CLASS_NAME, "sc-cTjmhe")
-                modifierGroupsList = []
-                for modifierGroup in modifierGroups:
+                add_modifiers(driver, itemPane, modifersChoices)
 
-                    name, rules = modifierGroup.find_element(By.ID, "modifier-header-parent").text.split("\n")
-                    modifierGroupsList.append(name + " - " + rules)
-                    modifiersList[name] = []
+            if comments is None:
+                comments = input("Text for the comments section (N to skip):")
 
-                    # print(name + " - " + rules)
-                    modifiers = modifierGroup.find_elements(By.XPATH, "./*")
-
-                    for modifierCount in range(1, len(modifiers)):
-                        modifiersList[name].append(
-                            Modifier(modifiers[modifierCount].text, modifierCount, modifiers[modifierCount]))
-
-                while True:
-                    count = 0
-                    for modifierGroup in modifierGroupsList:
-                        print(str(count) + " - " + modifierGroup)
-                        count += 1
-                    print("999 - To not add a modifier")
-                    categoryChoice = int(input(
-                        "Enter the index of the modifier you want to add (You must add all of the required ones): \n"))
-                    if categoryChoice != 999 and categoryChoice < len(modifierGroupsList):
-                        groupBeingUsed = modifiersList[modifierGroupsList[categoryChoice].split(" - ")[0]]
-                        while True:
-                            print(modifierGroupsList[categoryChoice])
-                            for modifier in groupBeingUsed:
-                                print(str(groupBeingUsed.index(modifier)) + " - " + modifier.name, end="")
-                                if modifier.isSelected:
-                                    print(Fore.RED + " - SELECTED" + Fore.RESET)
-
-                                else:
-                                    print()
-                            print("999 - To go back to category selection")
-                            modifierChoice = int(input("Enter the index of the modifier you want to add: \n"))
-                            if modifierChoice != 999:
-
-
-                                # driver.execute_script("arguments[0].scrollIntoView(true);", groupBeingUsed[modifierChoice+1].selectButton)
-                                # driver.execute_script("arguments[0].scrollIntoView();", groupBeingUsed[modifierChoice].selectButton)
-
-                                # input("Press enter to continue")
-                                # wait.until(ec.visibility_of_element_located(groupBeingUsed[modifierChoice].selectButton.find_element(By.CLASS_NAME, "fa")))
-                                # groupBeingUsed[modifierChoice].selectButton.find_element(By.CLASS_NAME, "fa").click()
-
-                                actions.move_to_element(groupBeingUsed[modifierChoice].selectButton).click().perform()
-
-                                # actions.click(groupBeingUsed[modifierChoice].selectButton)
-                                # actions.perform()
-                                # time.sleep(2)
-                                #
-                                groupBeingUsed[modifierChoice].isSelected = not groupBeingUsed[
-                                    modifierChoice].isSelected
-                            else:
-                                break
-                    else:
-                        break
-
-            # ask = input("Text for the comments section (N to skip):")
-            #
-            # if ask.capitalize() != "N":
-            #     itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field").send_keys(ask)
+            if comments.capitalize() != "N":
+                actions.move_to_element(itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field")).perform()
+                itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field").send_keys(comments)
 
             itemPane.find_element(By.CLASS_NAME, 'add-to-cart-button').click()
             print("Added " + selectedItem.name + " to cart")
