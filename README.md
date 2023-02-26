@@ -2,7 +2,7 @@
 
 Allows the user to order from on demand using HTTP requests to an API I created. Uses Selenium and Python to navigate through OnDemand in a headless browser hosted in a Docker container. 
 
-Adapted from [AutoOrder](https://github.com/bobbykdhan/AutoOrder). Now allows the orders to be process none interactivly and allows better automation.
+Adapted from [AutoOrder](https://github.com/bobbykdhan/AutoOrder). Now allows the orders to be process non interactivly and allows better automation.
 
 ## Installation
 
