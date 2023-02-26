@@ -1,5 +1,6 @@
 import time
 
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
@@ -53,8 +54,8 @@ def orderFood(selection):
         print()
 
 
-time.sleep(5)
-testScreenshot()
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
 
 #TODO make this work
 
@@ -69,4 +70,5 @@ testScreenshot()
 #     # resp.message("The Robots are coming! Head for the hills!")
 #     #
 #     # print(str(resp))
+
 
