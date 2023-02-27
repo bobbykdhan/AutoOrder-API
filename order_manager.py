@@ -5,7 +5,6 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 
 from login import *
-from webdriver_handler import create_driver
 
 
 @dataclass
@@ -42,56 +41,8 @@ class itemListing:
     item: str
 
 
-def setupOrder(orderString):
-    # Sample order string
-    # store; category:item, category:item, category:item
-    """Function that sets up the order by parsing the order string and returning a tuple of the store, category, and items."""
-    # Splits the order string into a list of items
-    orderList = orderString.split(",")
-    # Gets the store name
-    store = orderList[0]
-    # Gets the category name
-    category = orderList[1]
-    # Gets the items
-    items = orderList[2:]
-    return (store, category, items)
 
 
-def main(orderString, driver):
-    store, category, items = setupOrder(orderString)
-
-    selectCategory(driver, category)
-    input("Press Enter to continue...")
-    # Calls the addToCart function and asks the user if they wish to continue shopping, change the category, or checkout
-    while True:
-        addToCart(None)
-        choice = input(
-            "Press Y if you are done adding to cart, Press C if you wish to choose another category, Press any key to keep selecting\n")
-        if (choice == "Y"):
-            break
-        elif choice == "C":
-            # Calls the selectCategory function for the user to change their category
-            selectCategory(driver)
-
-    print("Logging in\n")
-
-    # Calls the signIn function to log the user in
-    sign_in(driver)
-    input("Waiting for duo press any key when complete")
-
-    # Calls the fulfillment function to complete the purchase after the cart container is loaded
-    wait.until(ec.presence_of_element_located((By.CLASS_NAME, "cart-link-container")))
-    print("Fulfilling order\n")
-    # fulfillment(firstName, lastInitial, phoneNumber, None)
-    print("Done placing order\n")
-
-
-def randomDebug(driver=None):
-    if driver is None:
-        driver = create_driver()
-    driver.get("https://ondemand.rit.edu/")
-    selectStore(driver, "Sol's Underground & Beanz")
-    selectCategory(driver, "Beverages")
 
 
 def selectStore(driver, selected_store=None):
@@ -248,38 +199,6 @@ def add_modifiers(driver, itemPane, modifersChoices=None):
                         print("Added " + modifier.name)
                         break
 
-    # while True:
-    #     count = 0
-    #     for modifierGroup in modifierGroupsList:
-    #         print(str(count) + " - " + modifierGroup)
-    #         count += 1
-    #     print("999 - To not add a modifier")
-    #     categoryChoice = int(input(
-    #         "Enter the index of the modifier you want to add (You must add all of the required ones): \n"))
-    #     if categoryChoice != 999 and categoryChoice < len(modifierGroupsList):
-    #         groupBeingUsed = modifiersList[modifierGroupsList[categoryChoice].split(" - ")[0]]
-    #         while True:
-    #             print(modifierGroupsList[categoryChoice])
-    #             for modifier in groupBeingUsed:
-    #                 print(str(groupBeingUsed.index(modifier)) + " - " + modifier.name, end="")
-    #                 if modifier.isSelected:
-    #                     print(Fore.RED + " - SELECTED" + Fore.RESET)
-    #
-    #                 else:
-    #                     print()
-    #             print("999 - To go back to category selection")
-    #             modifierChoice = int(input("Enter the index of the modifier you want to add: \n"))
-    #             if modifierChoice != 999:
-    #
-    #                 actions.move_to_element(groupBeingUsed[modifierChoice].selectButton).perform()
-    #                 groupBeingUsed[modifierChoice].selectButton.click()
-    #
-    #                 groupBeingUsed[modifierChoice].isSelected = not groupBeingUsed[
-    #                     modifierChoice].isSelected
-    #             else:
-    #                 break
-    #     else:
-    #         break
 
 
 def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=None):
@@ -288,10 +207,10 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
     """
     itemIndex = 99999
     # If no item index is given, ask the user for one. Otherwise, use the given index.
-    # TODO: add the ability to add items without waiting for user input
+
 
     wait = WebDriverWait(driver, 150, poll_frequency=1)
-
+    # TODO move all code about selecting options to a script to search all stores
     if itemIndex is None:
         # Iterates through each item in the list of items and prints the name and index
 
@@ -301,7 +220,6 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
         # Asks the user for the index of the item they want to add
         itemIndex = int(input("Enter the index of the item you want to add to cart: \n"))
 
-    # TODO: Add functionality to add items with modifiers
     # Checks if the user doesn't want to add an item
     if itemIndex != 999:
         if selectedItem is None:
@@ -322,8 +240,8 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
             if modifiersAvailable:
                 add_modifiers(driver, itemPane, modifersChoices)
 
-            if comments is None:
-                comments = input("Text for the comments section (N to skip):")
+            # if comments is None:
+            #     comments = input("Text for the comments section (N to skip):")
 
             if comments.capitalize() != "N":
                 actions.move_to_element(itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field")).perform()
@@ -336,14 +254,17 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
         except Exception as e:
             # Catches any errors and prints the error
             print("Error adding item to cart")
-            itemPane.find_element(By.CLASS_NAME, 'close-icon').click()
+            try:
+                itemPane.find_element(By.CLASS_NAME, 'close-icon').click()
+            except:
+                print("Couldn't close item pane")
             print(e)
             print("Couldn't add " + str(selectedItem.name) + " to cart")
         except IndexError:
             pass
 
 
-def fulfillment(firstName, lastInitial, phoneNumber, driver):
+def fulfillment(firstName, lastInitial, phoneNumber, driver, wait=True):
     """Fulfills the order.
     :param driver:
     """
@@ -365,9 +286,10 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver):
     # Clicks the submit button at the end of the fulfillment form
     driver.find_element(By.CLASS_NAME, "pay-button-site-has-signin").click()
 
-    input("IF YOU PRESS ENTER YOU WILL BUY FOOD")
-    input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
-    input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
+    if wait:
+        input("IF YOU PRESS ENTER YOU WILL BUY FOOD")
+        input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
+        input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
     # Clicks the finalize button, waits for the payment buttons to load, and selects the RIT Dining Dollars method
     wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-button")))
     driver.find_element(By.CLASS_NAME, "pay-button").click()
@@ -385,5 +307,40 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver):
     wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
     driver.find_element(By.CSS_SELECTOR, sendSelector).click()
 
-# driver = create_driver(False, True)
-# debug(driver)
+
+def open_login(driver):
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
+    # Waits until the cart icon is visible and clicks it
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "cart-icon")))
+    driver.find_element(By.CLASS_NAME, "cart-icon").click()
+
+    # Waits until the checkout icon is visible and clicks it
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-cart-button")))
+    driver.find_element(By.CLASS_NAME, "pay-cart-button").click()
+
+    # Waits until the login icon is visible and clicks it
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "login-btn-atrium")))
+    driver.find_element(By.CLASS_NAME, "login-btn-atrium").click()
+
+
+def breakfast(driver, amount=2, add_drink=True):
+    driver.get("https://ondemand.rit.edu/")
+    selectStore(driver, "Ctrl Alt DELi")
+    items = selectCategory(driver, "Breakfast")
+    selectedItem = select_item(items, "Bagel, Egg, and Cheese Sandwich")
+    for i in range(amount):
+        addToCart(driver, items, selectedItem, {"Cheese": "Extra Cheese"}, "On a roll please")
+    if add_drink:
+        items = selectCategory(driver, "Beverages")
+        selectedItem = select_item(items, "Tropicana Apple Juice")
+        addToCart(driver, items, selectedItem)
+
+
+def commons_burger(driver, amount=1):
+    global items
+    driver.get("https://ondemand.rit.edu/")
+    selectStore(driver, "The Commons")
+    items = selectCategory(driver, "Grill")
+    selectedItem = select_item(items, "Black Bean Burger")
+    for i in range(amount):
+        addToCart(driver, items, selectedItem, {"Add Cheese?": "American Cheese"})
