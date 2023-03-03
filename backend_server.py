@@ -6,7 +6,6 @@ from fastapi import FastAPI
 
 import my_twilio
 from image import upload_screenshot
-from login import *
 from order_manager import *
 from webdriver_handler import *
 
@@ -16,6 +15,7 @@ app = FastAPI()
 
 my_twilio.send_text("Personal Order server started")
 
+global driver
 
 @app.get("/")
 async def root():
@@ -23,7 +23,7 @@ async def root():
 
 
 @app.get("/demoOrder")
-async def demoOrder(selection: str):
+async def demoOrder():
     driver = create_driver()
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     # Opens the ondemand website
@@ -46,7 +46,13 @@ async def demoOrder(selection: str):
     wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "cart-icon")))
     driver.find_element(By.CLASS_NAME, "cart-icon").click()
 
-    return driver, items
+    return {"message": "Done with demo order"}
+
+
+@app.get("/quitDriver")
+async def quitDriver():
+    driver.quit()
+    return {"message": "Driver quit"}
 
 
 @app.get("/order/{selection}")
@@ -56,7 +62,7 @@ async def say_hello(selection: str):
 
 @app.get("/testScreenshot")
 async def testScreenshot():
-    driver = create_driver(True)
+    driver = create_driver()
     driver.get("https://www.youtube.com")
     print("Created driver")
     time.sleep(5)
