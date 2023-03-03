@@ -4,10 +4,11 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from image import upload_screenshot
-from webdriver_handler import *
-
 import my_twilio
+from image import upload_screenshot
+from login import *
+from order_manager import *
+from webdriver_handler import *
 
 load_dotenv()
 
@@ -16,15 +17,42 @@ app = FastAPI()
 my_twilio.send_text("Personal Order server started")
 
 
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
 
+@app.get("/demoOrder")
+async def demoOrder(selection: str):
+    driver = create_driver()
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
+    # Opens the ondemand website
+    driver.get("https://ondemand.rit.edu/")
+    selectStore(driver, "Sol's")
+    items = selectCategory(driver, "Beverages")
+    selectedItems = []
+    selectedItems.append(select_item(items, "Aquafina Water 20 oz"))
+    selectedItems.append(select_item(items, "Schweppes Ginger Ale"))
+
+    for item in selectedItems:
+        addToCart(driver, items, item, {}, "Look how cool I am")
+
+    items = selectCategory(driver, "Ice Cream")
+    selectedItems = []
+    addToCart(driver, items, select_item(items, "Shake"), {"Shake Choices": "Strawberry"}, "Look how cool I am")
+
+    other_open_login(driver)
+    sign_in(driver)
+    wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "cart-icon")))
+    driver.find_element(By.CLASS_NAME, "cart-icon").click()
+
+    return driver, items
+
+
 @app.get("/order/{selection}")
 async def say_hello(selection: str):
     orderFood(selection)
+
 
 @app.get("/testScreenshot")
 async def testScreenshot():
@@ -70,5 +98,3 @@ if __name__ == "__main__":
 #     # resp.message("The Robots are coming! Head for the hills!")
 #     #
 #     # print(str(resp))
-
-

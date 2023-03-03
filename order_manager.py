@@ -41,10 +41,6 @@ class itemListing:
     item: str
 
 
-
-
-
-
 def selectStore(driver, selected_store=None):
     """ Selects the store the user wants to shop from
     :param driver:
@@ -200,14 +196,16 @@ def add_modifiers(driver, itemPane, modifersChoices=None):
                         break
 
 
-
-def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=None):
+def addToCart(driver, items, selected_item=None, modifiers_choices=None, comments=None):
     """Adds an item to the cart.
+    :param comments: 
+    :param modifiers_choices: 
+    :param items: 
+    :param selected_item: 
     :param driver:
     """
     itemIndex = 99999
     # If no item index is given, ask the user for one. Otherwise, use the given index.
-
 
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     # TODO move all code about selecting options to a script to search all stores
@@ -222,13 +220,13 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
 
     # Checks if the user doesn't want to add an item
     if itemIndex != 999:
-        if selectedItem is None:
-            selectedItem = items[itemIndex]
+        if selected_item is None:
+            selected_item = items[itemIndex]
         try:
             # Adds the item to the cart
             actions = ActionChains(driver)
-            actions.move_to_element(selectedItem.cartPointer).perform()
-            selectedItem.cartPointer.click()
+            actions.move_to_element(selected_item.cartPointer).perform()
+            selected_item.cartPointer.click()
             wait.until(ec.visibility_of_element_located((By.ID, "item-detail-parent")))
             wait.until(ec.visibility_of_element_located((By.CLASS_NAME, 'add-to-cart-button')))
             itemPane = driver.find_element(By.ID, "item-detail-parent")
@@ -238,17 +236,14 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
             modifiersAvailable = len(itemPane.find_elements(By.CLASS_NAME, "modifiers")) > 0
 
             if modifiersAvailable:
-                add_modifiers(driver, itemPane, modifersChoices)
+                add_modifiers(driver, itemPane, modifiers_choices)
 
-            # if comments is None:
-            #     comments = input("Text for the comments section (N to skip):")
-
-            if comments.capitalize() != "N":
+            if comments is not None:
                 actions.move_to_element(itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field")).perform()
                 itemPane.find_element(By.CLASS_NAME, "custom-tip-input-field").send_keys(comments)
 
             itemPane.find_element(By.CLASS_NAME, 'add-to-cart-button').click()
-            print("Added " + selectedItem.name + " to cart")
+            print("Added " + selected_item.name + " to cart")
 
 
         except Exception as e:
@@ -259,19 +254,18 @@ def addToCart(driver, items, selectedItem=None, modifersChoices=None, comments=N
             except:
                 print("Couldn't close item pane")
             print(e)
-            print("Couldn't add " + str(selectedItem.name) + " to cart")
-        except IndexError:
-            pass
+            print("Couldn't add " + str(selected_item.name) + " to cart")
 
 
 def fulfillment(firstName, lastInitial, phoneNumber, driver, wait=True):
     """Fulfills the order.
     :param driver:
     """
+
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     # Clicks the cart button, waits for the checkout button to appear and clicks it
     driver.find_element(By.CLASS_NAME, "cart-icon").click()
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-cart-button")))
+    wait.until(ec.element_to_be_clickable((By.CLASS_NAME, "pay-cart-button")))
     driver.find_element(By.CLASS_NAME, "pay-cart-button").click()
 
     # Waits for the fulfillment page to load and then fills out the form
@@ -286,26 +280,26 @@ def fulfillment(firstName, lastInitial, phoneNumber, driver, wait=True):
     # Clicks the submit button at the end of the fulfillment form
     driver.find_element(By.CLASS_NAME, "pay-button-site-has-signin").click()
 
-    if wait:
-        input("IF YOU PRESS ENTER YOU WILL BUY FOOD")
-        input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
-        input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
-    # Clicks the finalize button, waits for the payment buttons to load, and selects the RIT Dining Dollars method
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-button")))
-    driver.find_element(By.CLASS_NAME, "pay-button").click()
-    finalCheckoutSelector = "#parent > div.BottomContainer.sc-mWPeY.iESGGn.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.desktop-pay.sc-khfTgR.cOrHDO.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.pay-list-top-container.sc-koJQpy.hVbJaq.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div.pay-options-parent.sc-ckixc.ddwhEt.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div.click-cont.container.tile.atrium-3.sc-kQeHGI.lbGlam.sc-bwzfXH.cjHxAH.sc-bdVaJa.iHZvIS > div > div.detail-container-atrium.sc-fWMzbn.wlcrT.sc-bwzfXH.iaREIe.sc-bdVaJa.gRrvFh > div"
-    wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, finalCheckoutSelector)))
-    driver.find_element(By.CSS_SELECTOR, finalCheckoutSelector).click()
-
-    # Waits for the text receipt button to load and clicks it
-    textReceiptSelector = "#parent > div.BottomContainer.sc-mWPeY.iESGGn.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.additional-options-container.sc-ePZHVD.fphWHk.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div:nth-child(3) > button"
-    wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, textReceiptSelector)))
-    driver.find_element(By.CSS_SELECTOR, textReceiptSelector).click()
-
-    # Waits for the send button to load and clicks it
-    sendSelector = "#receipt-modal > div.receipt-modal-parent.sc-bmyXtO.lkstDj.sc-frDJqD.bDtUxi.sc-ksYbfQ.kYqsUP.sc-TOsTZ.cESxnL > div.sc-kaNhvL.fPGvtj.sc-bdVaJa.gRrvFh > button"
-    wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
-    driver.find_element(By.CSS_SELECTOR, sendSelector).click()
+    # if wait:
+    #     input("IF YOU PRESS ENTER YOU WILL BUY FOOD")
+    #     input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
+    #     input("IF YOU PRESS ENTER AGAIN YOU WILL BUY FOOD")
+    # # Clicks the finalize button, waits for the payment buttons to load, and selects the RIT Dining Dollars method
+    # wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "pay-button")))
+    # driver.find_element(By.CLASS_NAME, "pay-button").click()
+    # finalCheckoutSelector = "#parent > div.BottomContainer.sc-mWPeY.iESGGn.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.desktop-pay.sc-khfTgR.cOrHDO.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.pay-list-top-container.sc-koJQpy.hVbJaq.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div.pay-options-parent.sc-ckixc.ddwhEt.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div.click-cont.container.tile.atrium-3.sc-kQeHGI.lbGlam.sc-bwzfXH.cjHxAH.sc-bdVaJa.iHZvIS > div > div.detail-container-atrium.sc-fWMzbn.wlcrT.sc-bwzfXH.iaREIe.sc-bdVaJa.gRrvFh > div"
+    # wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, finalCheckoutSelector)))
+    # driver.find_element(By.CSS_SELECTOR, finalCheckoutSelector).click()
+    #
+    # # Waits for the text receipt button to load and clicks it
+    # textReceiptSelector = "#parent > div.BottomContainer.sc-mWPeY.iESGGn.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div.additional-options-container.sc-ePZHVD.fphWHk.sc-bwzfXH.hKiLMS.sc-bdVaJa.iHZvIS > div > div:nth-child(3) > button"
+    # wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, textReceiptSelector)))
+    # driver.find_element(By.CSS_SELECTOR, textReceiptSelector).click()
+    #
+    # # Waits for the send button to load and clicks it
+    # sendSelector = "#receipt-modal > div.receipt-modal-parent.sc-bmyXtO.lkstDj.sc-frDJqD.bDtUxi.sc-ksYbfQ.kYqsUP.sc-TOsTZ.cESxnL > div.sc-kaNhvL.fPGvtj.sc-bdVaJa.gRrvFh > button"
+    # wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, sendSelector)))
+    # driver.find_element(By.CSS_SELECTOR, sendSelector).click()
 
 
 def open_login(driver):
@@ -323,17 +317,31 @@ def open_login(driver):
     driver.find_element(By.CLASS_NAME, "login-btn-atrium").click()
 
 
+def other_open_login(driver):
+    wait = WebDriverWait(driver, 150, poll_frequency=1)
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "agilysys-icon-menu_black")))
+    driver.find_element(By.CLASS_NAME, "agilysys-icon-menu_black").click()
+
+    # Waits until the checkout icon is visible and clicks it
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "sign-in")))
+    driver.find_element(By.CLASS_NAME, "sign-in").click()
+
+    # Waits until the login icon is visible and clicks it
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "login-btn-atrium")))
+    driver.find_element(By.CLASS_NAME, "login-btn-atrium").click()
+
+
 def breakfast(driver, amount=2, add_drink=True):
     driver.get("https://ondemand.rit.edu/")
     selectStore(driver, "Ctrl Alt DELi")
     items = selectCategory(driver, "Breakfast")
-    selectedItem = select_item(items, "Bagel, Egg, and Cheese Sandwich")
+    selected_item = select_item(items, "Bagel, Egg, and Cheese Sandwich")
     for i in range(amount):
-        addToCart(driver, items, selectedItem, {"Cheese": "Extra Cheese"}, "On a roll please")
+        addToCart(driver, items, selected_item, {"Cheese": "Extra Cheese"}, "On a roll please")
     if add_drink:
         items = selectCategory(driver, "Beverages")
-        selectedItem = select_item(items, "Tropicana Apple Juice")
-        addToCart(driver, items, selectedItem)
+        selected_item = select_item(items, "Tropicana Apple Juice")
+        addToCart(driver, items, selected_item)
 
 
 def commons_burger(driver, amount=1):

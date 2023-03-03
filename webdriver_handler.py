@@ -5,7 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
 
-def create_driver(url="http://localhost:4444", firefox=True, screen_size=(3000, 3000)):
+def create_driver(url="http://shell.personal-order.cs.house", firefox=True, screen_size=(3000, 3000)):
     if firefox:
         options = webdriver.FirefoxOptions()
     else:
