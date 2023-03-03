@@ -4,7 +4,6 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-import my_twilio
 from image import upload_screenshot
 from order_manager import *
 from webdriver_handler import *
@@ -13,7 +12,7 @@ load_dotenv()
 
 app = FastAPI()
 
-my_twilio.send_text("Personal Order server started")
+# my_twilio.send_text("Personal Order server started")
 
 global driver
 
