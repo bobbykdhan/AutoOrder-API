@@ -2,7 +2,7 @@ import time
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 
 from image import upload_screenshot
 from order_manager import *
@@ -16,14 +16,10 @@ app = FastAPI()
 
 global driver
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
-
-@app.get("/demoOrder")
-async def demoOrder():
+def testDemoOrder(idk):
     driver = create_driver()
+
     wait = WebDriverWait(driver, 150, poll_frequency=1)
     # Opens the ondemand website
     driver.get("https://ondemand.rit.edu/")
@@ -46,6 +42,18 @@ async def demoOrder():
     driver.find_element(By.CLASS_NAME, "cart-icon").click()
 
     return {"message": "Done with demo order"}
+
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+
+@app.get("/demoOrder")
+async def demoOrder(BackgroundTasks: BackgroundTasks):
+    BackgroundTasks.add_task(testDemoOrder, "hi")
+    # send_text("Demo order started")
+    return {"message": "Demo order started"}
 
 
 @app.get("/quitDriver")
